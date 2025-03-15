@@ -1,0 +1,34 @@
+meta {
+  name: Mint a new batch NFT
+  type: http
+  seq: 3
+}
+
+post {
+  url: {{baseUrl}}/tx/true/mint-batch
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "batch_data": {
+      "info": "string",
+      "mdata": "string",
+      "minscr": "string"
+    },
+    "batch_meta": {
+      "description": "string",
+      "image": "string",
+      "name": "string"
+    },
+    "batch_quantity": [
+      100,
+      100
+    ]
+  }
+}
+
+vars:pre-request {
+  baseUrl: http://localhost:8082
+}

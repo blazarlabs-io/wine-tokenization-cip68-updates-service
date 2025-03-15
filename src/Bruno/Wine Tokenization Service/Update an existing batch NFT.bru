@@ -1,0 +1,16 @@
+meta {
+  name: Update an existing batch NFT
+  type: http
+  seq: 5
+}
+
+put {
+  url: {{baseUrl}}/tx/:wait/update-batch/:batchId
+  body: none
+  auth: none
+}
+
+params:path {
+  wait: 
+  batchId: 
+}

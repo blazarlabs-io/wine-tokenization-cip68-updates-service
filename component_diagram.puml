@@ -1,0 +1,75 @@
+
+@startuml ComponentDiagram 
+!theme toy
+
+title "Components Diagram"
+caption: Wine Tokenization
+
+
+skinparam interface {
+    BackgroundColor Orange
+}
+
+skinparam component {
+    BackgroundColor<<DApp>> Orange
+    FontSize Black
+
+    BackgroundColor<<3rdParty>> LightCoral
+}
+skinparam cloud {
+    BackgroundColor LightBlue
+}
+skinparam node {
+    BackgroundColor Blue
+    FontColor White
+}
+
+
+component BackEnd #LightGray {
+
+    node CardanoNode  as "Cardano\nNode"
+
+    component Interactions  <<DApp>> as "Wine Tokenisation\nService" {
+        control TxBuilding as "Transaction\nBuilding"
+
+    }
+    node  IPFSNode as "IPFS\nNode"  
+
+    portin interactionsPort as "."
+
+    Interactions -->> CardanoNode : query \ \n submit tx
+    Interactions -->> IPFSNode : get \ \n publish
+
+
+    Interactions - interactionsPort
+
+
+}
+interface InteractionsAPI as "REST API"
+interactionsPort -up- InteractionsAPI
+
+
+cloud IPFSNetwork as "IPFS\nNetwork" {
+    note as WineData
+    Descriptive data and 
+    measurments for wine 
+    batches and bottles.
+    end note
+}
+
+
+ 
+
+cloud BlockchainNetwork as "Cardano Blockchain\nNetwork" {
+    note as SmarContracts
+    Smart Contracts &
+    Minting Policies
+    for Wine Tokens
+    end note
+}
+
+
+CardanoNode -- BlockchainNetwork
+IPFSNode -- IPFSNetwork
+
+@enduml

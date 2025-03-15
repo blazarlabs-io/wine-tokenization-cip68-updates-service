@@ -1,0 +1,16 @@
+{
+    "coreProvider": {
+        "maestroToken": "U9Y71Vxqzkjr9P0A1O9EahSlMNSanZwo",
+        "turboSubmit": true
+    },
+    "networkId": "preview",
+    "logging": [
+        {
+            "type": {
+                "tag": "stderr"
+            },
+            "severity": "Debug",
+            "verbosity": "V2"
+        }
+    ]
+}

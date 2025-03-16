@@ -52,9 +52,9 @@ getScriptFromUTxORef :: (GYTxQueryMonad m) => GYTxOutRef -> m (GYScript 'PlutusV
 getScriptFromUTxORef refScript = do
     utxo <- utxoAtTxOutRef' refScript
     case utxoRefScript utxo of
-        Nothing -> error "utxo with refrerence script expected"
+        Nothing -> throwError $ GYApplicationException (CustomException "utxo with refrerence script expected")
         Just anyscr -> case anyscr of
-            GYSimpleScript _ -> error "script of wrong type"
+            GYSimpleScript _ -> throwError $ GYApplicationException (CustomException "wrong script type")
             GYPlutusScript gy -> return $ unsafeCoerce gy
 
 txMustUpdateStateToken :: (GYTxUserQueryMonad m, ToData a, ToData b) => GYTxOutRef -> AssetClass -> a -> (GYDatum -> b) -> m (GYTxSkeleton 'PlutusV3)
@@ -63,8 +63,8 @@ txMustUpdateStateToken refScript stateTokenId redeemer updateDatumFunction =
         wineValidatorGY <- getScriptFromUTxORef refScript
         let gyRedeemer = redeemerFromPlutusData redeemer
         validatorAddr <- scriptAddress wineValidatorGY
-        stateUTxO <- either error id <$> lookupUTxOWithStateToken stateTokenId validatorAddr
-        let (gyDatum, v) = either error id $ getInlineDatumAndValue stateUTxO
+        stateUTxO <- liftEitherToCustomException =<< lookupUTxOWithStateToken stateTokenId validatorAddr
+        (gyDatum, v) <- liftEitherToCustomException $ getInlineDatumAndValue stateUTxO
         let updatedWT = updateDatumFunction gyDatum
         isLockingUpdatedDatum <- txMustLockStateWithInlineDatumAndValue validatorAddr updatedWT v
         return $
@@ -171,9 +171,9 @@ newBottleSk ::
     WineToken ->
     m (GYTxSkeleton 'PlutusV3, GYAssetClass)
 newBottleSk refScript adminAddr wineToken = do
-    let batchId = case wineToken of
-            (WineToken _ _ (BottleToken b)) -> b
-            _ -> error "not a bottle "
+    batchId <- case wineToken of
+        (WineToken _ _ (BottleToken b)) -> return b
+        _ -> liftEitherToCustomException $ Left "not a bottle "
     logInfoYellow $ show wineToken
     wineValidatorAddr <- scriptAddress =<< getScriptFromUTxORef refScript
     (isMintingBottleRefAndUserTokens, (gyRefAC, gyUserAC)) <- mintsUserAndRef refScript wineToken
@@ -248,7 +248,7 @@ burnUserToken refScript adminAddr tokenId@(GYToken _ gyUserTN) = do
             [ mustMint (GYMintReference refScript wineMintingPolicyGY) gyRedeemer gyUserTN (negate 1)
             , mustBeSignedBy adminPkh
             ]
-burnUserToken _ _ _ = error "invalid token"
+burnUserToken _ _ _ = liftEitherToCustomException $ Left "invalid token"
 
 -- |  Burn Reference Token Transaction Skeleton
 burnRefToken ::
@@ -262,8 +262,8 @@ burnRefToken refScript adminAddr gyRefAC@(GYToken _ gyRefTN) = do
     wineValidatorGY <- getScriptFromUTxORef refScript
     let gyRedeemer = redeemerFromPlutusData (Burn refAC)
     validatorAddr <- scriptAddress wineValidatorGY
-    stateUTxO <- either error id <$> lookupUTxOWithStateToken refAC validatorAddr
-    let (gyDatum, _) = either error id $ getInlineDatumAndValue stateUTxO
+    stateUTxO <- liftEitherToCustomException =<< lookupUTxOWithStateToken refAC validatorAddr
+    (gyDatum, _) <- liftEitherToCustomException $ getInlineDatumAndValue stateUTxO
     adminPkh <- addressToPubKeyHash' adminAddr
     wineMintingPolicyGY <- getScriptFromUTxORef refScript
     return $
@@ -276,4 +276,4 @@ burnRefToken refScript adminAddr gyRefAC@(GYToken _ gyRefTN) = do
             , mustMint (GYMintReference refScript wineMintingPolicyGY) gyRedeemer gyRefTN (negate 1)
             , mustBeSignedBy adminPkh
             ]
-burnRefToken _ _ _ = error "invalid token"
+burnRefToken _ _ _ = liftEitherToCustomException $ Left "invalid token"

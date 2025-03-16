@@ -7,15 +7,20 @@ meta {
 post {
   url: {{baseUrl}}/tx/true/mint-batch
   body: json
-  auth: none
+  auth: basic
+}
+
+auth:basic {
+  username: cardano
+  password: lovelace
 }
 
 body:json {
   {
     "batch_data": {
-      "info": "string",
-      "mdata": "string",
-      "minscr": "string"
+      "info": "{ ...}",
+      "mdata": "{.....}",
+      "minscr": "{...}"
     },
     "batch_meta": {
       "description": "string",
@@ -27,8 +32,4 @@ body:json {
       100
     ]
   }
-}
-
-vars:pre-request {
-  baseUrl: http://localhost:8082
 }

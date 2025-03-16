@@ -2,10 +2,22 @@ module Offchain.OffchainUtils where
 
 import Data.Aeson (decodeFileStrict)
 import GeniusYield.Imports (HasCallStack)
-import GeniusYield.TxBuilder (GYTxQueryMonad, gyLogInfo')
+import GeniusYield.TxBuilder (GYTxMonadException (GYApplicationException), GYTxQueryMonad, gyLogInfo')
 
+import Control.Exception
+import Control.Monad.Error.Class
+import GeniusYield.HTTP.Errors
 import PlutusTx.Builtins.HasOpaque (stringToBuiltinString)
 import System.Directory.Extra (doesFileExist)
+
+newtype CustomException = CustomException String
+    deriving (Show)
+
+instance Exception CustomException
+instance IsGYApiError CustomException
+
+liftEitherToCustomException :: (MonadError GYTxMonadException m) => Either String b -> m b
+liftEitherToCustomException = either (throwError . GYApplicationException . CustomException) return
 
 -- --------- TO BE USED OFFCHAIN
 
@@ -60,5 +72,5 @@ decodeConfigFile path = do
             case v of
                 Just a -> return a
                 Nothing -> error $ "Dedoding " <> show path <> " failed !"
-        else do
-            error $ show path <> " not found"
+        else
+            throw $ CustomException $ show path <> " not found"

@@ -2,7 +2,7 @@
 
 module Offchain.Interactions where
 
-import Data.Either (fromRight)
+import Control.Exception
 import Data.Swagger (ToSchema)
 import Data.Tuple.Extra
 import GHC.Stack
@@ -50,7 +50,7 @@ fromWineTokenData (WineTokenData i md is) = TokenData (fromBuiltinByteStringUtf8
 
 fromWineToken :: WineToken -> WineTokenDT
 fromWineToken (WineToken m d (BatchToken (BatchQuantity q r))) = Batch (fromWineTokenMeta m) (fromWineTokenData d) (q, r)
-fromWineToken (WineToken m d (BottleToken batchId)) = Bottle (fromWineTokenMeta m) (fromWineTokenData d) (fromRight (error "error from plutus") $ assetClassFromPlutus batchId)
+fromWineToken (WineToken m d (BottleToken batchId)) = Bottle (fromWineTokenMeta m) (fromWineTokenData d) (either throw id $ assetClassFromPlutus' batchId)
 
 mkWineBatch :: TokenMeta -> TokenData -> (Integer, Integer) -> WineToken
 mkWineBatch (TokenMeta name image desc) (TokenData info mdatainfo _) (q, r) =
@@ -72,7 +72,7 @@ mkWineBatch (TokenMeta name image desc) (TokenData info mdatainfo _) (q, r) =
                 ( BatchToken
                     (BatchQuantity q r)
                 )
-        else Prelude.error "invalid quantity"
+        else throw $ CustomException "invalid quantity"
 
 mkWineBottle :: TokenMeta -> TokenData -> AssetClass -> WineToken
 mkWineBottle (TokenMeta name image desc) (TokenData info mdatainfo minscr) batchId =
@@ -135,4 +135,4 @@ interactionToTxSkeleton (WineInteractionCtx wineValidatorRef adminAddr) interact
         WineInteraction (UpdateBottle bottleId) (Just (Bottle tmeta tdata batchId)) -> (,Nothing) <$> updateBottleSk wineValidatorRef adminAddr bottleId (mkWineBottle tmeta tdata (assetClassToPlutus batchId))
         WineInteraction (BurnUserToken tokenId) Nothing -> (,Nothing) <$> burnUserToken wineValidatorRef adminAddr tokenId
         WineInteraction (BurnRefToken tokenId) Nothing -> (,Nothing) <$> burnRefToken wineValidatorRef adminAddr tokenId
-        _ -> error "Invalid Wine Interraction"
+        _ -> liftEitherToCustomException $ Left "Invalid Wine Interraction"

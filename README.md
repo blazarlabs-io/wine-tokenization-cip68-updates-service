@@ -3,15 +3,22 @@
 # Wine Supply Chain Tracking and Reporting System 🍷🍇
 
 - [Wine Supply Chain Tracking and Reporting System 🍷🍇](#wine-supply-chain-tracking-and-reporting-system-)
-	- [1. Overview](#1-overview)
-	- [3. Architecture \& Components](#3-architecture--components)
-	- [4. Project Structure](#4-project-structure)
-	- [5. Installation \& Setup](#5-installation--setup)
-	- [6. Usage](#6-usage)
-	- [7. License](#7-license)
-	- [8. Contributions, Feedback and Support](#8-contributions-feedback-and-support)
-	- [9. Future Milestones](#9-future-milestones)
-	- [10. Acknowledgments](#10-acknowledgments)
+  - [1. Overview](#1-overview)
+  - [3. Architecture \& Components](#3-architecture--components)
+  - [4. Project Structure](#4-project-structure)
+  - [5. Installation \& Setup](#5-installation--setup)
+    - [5.1 **Development setup**](#51-development-setup)
+  - [6. Operation](#6-operation)
+    - [6.1 **Docker setup**](#61-docker-setup)
+    - [6.2.  **Configure admin key**](#62--configure-admin-key)
+    - [6.3.  **Configure `atlas_config.json`**](#63--configure-atlas_configjson)
+  - [7. Usage](#7-usage)
+    - [7.1. Deploying validators](#71-deploying-validators)
+    - [7.2. Starting the service](#72-starting-the-service)
+  - [8. License](#8-license)
+  - [9. Contributions, Feedback and Support](#9-contributions-feedback-and-support)
+  - [10. Future Milestones](#10-future-milestones)
+  - [11. Acknowledgments](#11-acknowledgments)
 
 ---
 
@@ -82,11 +89,28 @@ cabal test
 
 ### 6.1 **Docker setup**
 
-You can pull the docker image with the latest version from here.
+You can pull the docker image for arm64 from here.
 
 ```
 docker pull mariusgeorgescu/wine-tokenization-service:latest
 ```
+
+You can pull the docker image for amd64 from here.
+
+```
+docker pull mariusgeorgescu/wine-tokenization-service:amd64
+```
+
+You build the image yourself with.
+
+```
+docker buildx build \
+  --platform linux/amd64 \
+  -t your-registry/your-image:latest \
+  .
+```
+
+
 * A container of this image will start the ipfs daemon and the wine service (with default test configuration) listening on http://0.0.0.0:8082/  (swagger on http://0.0.0.0:8082/swagger-ui)
 
 

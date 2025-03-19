@@ -1,4 +1,18 @@
-FROM haskell:9.6.6
+# syntax=docker/dockerfile:1.4
+
+##
+# This line ensures Docker pulls the correct multi-arch base image
+# depending on the platform we specify during buildx.
+##
+FROM --platform=$TARGETPLATFORM haskell:9.6.6 AS builder
+
+##
+# Let’s define architecture/platform arguments so we can do architecture-
+# specific tasks (e.g., download the correct IPFS binary).
+##
+ARG TARGETARCH
+ARG TARGETPLATFORM
+
 
 
 
@@ -82,8 +96,8 @@ RUN git clone https://github.com/supranational/blst && \
 WORKDIR /
 
 # Install IPFS
-RUN wget https://dist.ipfs.tech/kubo/v0.33.2/kubo_v0.33.2_linux-arm64.tar.gz && \
-    tar -xvzf kubo_v0.33.2_linux-arm64.tar.gz 
+RUN wget https://dist.ipfs.tech/kubo/v0.33.2/kubo_v0.33.2_linux-${TARGETARCH}.tar.gz && \
+    tar -xvzf kubo_v0.33.2_linux-${TARGETARCH}.tar.gz 
 
 RUN bash /kubo/install.sh
 

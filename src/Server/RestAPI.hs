@@ -4,15 +4,17 @@ module RestAPI where
 
 import Control.Monad.Except
 
-import GeniusYield.Types hiding (description, title)
-import Network.HTTP.Types qualified as HttpTypes
-
 import Control.Exception (throw)
 import Control.Exception.Extra (try)
 import Control.Lens ((&), (.~), (?~))
+import Data.List (lookup)
 import Data.Swagger
 import Data.Text.Encoding qualified
+import GeniusYield.Types hiding (description, title)
 import IPFS
+import Network.HTTP.Types qualified as HttpTypes
+import Network.HTTP.Types.Header
+import Network.Wai
 import Network.Wai.Middleware.Cors
 import Offchain.Context (WineAdminContext (..), WineOffchainContext (..), runQuery)
 import Offchain.Interactions (
@@ -186,10 +188,21 @@ handleGetNFT (WineOffchainContext (WineAdminContext{..}) providetCtx) tokenId = 
 
 restAPIapp :: Text -> Text -> WineOffchainContext -> Application
 restAPIapp usr pass ctx =
-    cors (const $ Just simpleCorsResourcePolicy{corsRequestHeaders = [HttpTypes.hContentType]}) $
-        serveWithContext wineAPIwithSwagger basicCtx $
-            hoistServerWithContext wineAPIwithSwagger (Proxy :: Proxy '[BasicAuthCheck User]) (Servant.Handler . ExceptT . try) $
-                wineServer ctx
+    cors
+        ( \req ->
+            let originHeader = lookup hOrigin (requestHeaders req)
+             in Just
+                    simpleCorsResourcePolicy
+                        { corsOrigins = fmap (\o -> ([o], True)) originHeader -- Reflect request's Origin dynamically
+                        , corsMethods = ["GET", "POST", "PUT", "DELETE"]
+                        , corsRequestHeaders = simpleHeaders <> [HttpTypes.hAuthorization]
+                        , corsExposedHeaders = Just $ simpleHeaders <> [HttpTypes.hAuthorization]
+                        , corsVaryOrigin = True
+                        }
+        )
+        $ serveWithContext wineAPIwithSwagger basicCtx
+        $ hoistServerWithContext wineAPIwithSwagger (Proxy :: Proxy '[BasicAuthCheck User]) (Servant.Handler . ExceptT . try)
+        $ wineServer ctx
   where
     basicCtx = basicAuthServerContext usr pass
 

@@ -7,11 +7,16 @@
   - [3. Architecture \& Components](#3-architecture--components)
   - [4. Project Structure](#4-project-structure)
   - [5. Installation \& Setup](#5-installation--setup)
-    - [5.1 **Development setup**](#51-development-setup)
+    - [5.1 Development setup](#51-development-setup)
   - [6. Operation](#6-operation)
-    - [6.1 **Docker setup**](#61-docker-setup)
-    - [6.2.  **Configure admin key**](#62--configure-admin-key)
-    - [6.3.  **Configure `atlas_config.json`**](#63--configure-atlas_configjson)
+    - [6.1.  Configure admin key](#61--configure-admin-key)
+    - [6.2.  **Configure `atlas_config.json`**](#62--configure-atlas_configjson)
+    - [6.3 Docker setup](#63-docker-setup)
+      - [6.3.1a Build docker image](#631a-build-docker-image)
+      - [6.3.1b Pull docker image](#631b-pull-docker-image)
+      - [6.3.2 Run a new containter](#632-run-a-new-containter)
+      - [6.3.3 Add the configuration files](#633-add-the-configuration-files)
+      - [6.3.4 Restart](#634-restart)
   - [7. Usage](#7-usage)
     - [7.1. Deploying validators](#71-deploying-validators)
     - [7.2. Starting the service](#72-starting-the-service)
@@ -68,7 +73,7 @@ The values ​​of the descriptive attributes and measurements are stored on IP
 ## 5. Installation & Setup
 
 
-### 5.1 **Development setup**
+### 5.1 Development setup
 
 This project uses the [The Developer Experience Shell](https://github.com/input-output-hk/devx/#the-developer-experience-shell) to build a fully-functioning and reproducible Cardano development shell for Haskell quickly and across multiple operating systems (and architectures).
 
@@ -87,42 +92,9 @@ cabal test
 
 ## 6. Operation
 
-### 6.1 **Docker setup**
-
-You can pull the docker image for arm64 from here.
-
-```
-docker pull mariusgeorgescu/wine-tokenization-service:latest
-```
-
-You can pull the docker image for amd64 from here.
-
-```
-docker pull mariusgeorgescu/wine-tokenization-service:amd64
-```
-
-Also you could build the image yourself with.
-
-```
-docker buildx build \
-  --platform linux/amd64 \
-  -t your-registry/your-image:latest \
-  .
-```
-
-
-* A container of this image will start the ipfs daemon and the wine service (with default test configuration) listening on http://0.0.0.0:8082/  (swagger on http://0.0.0.0:8082/swagger-ui)
-
-
-
-Eg. of running the server (with default test configuration) and "basicuser" & "basicpass" as user and pass for the Basic Auth
-
-```
-docker run -i -p 8082:8082 --name wts mariusgeorgescu/wine-tokenization-service:latest server basicuser basicpass
-```
 
 ***
-### 6.2.  **Configure admin key**
+### 6.1.  Configure admin key
 ***
   * This service is managed by an owner who pays for the submited transactions fees.  For this purpose, a file named **"payment.skey"**, which should have the following format must exist.
 
@@ -150,7 +122,7 @@ cardano-cli address build \
 
 
 ***
-### 6.3.  **Configure `atlas_config.json`**
+### 6.2.  **Configure `atlas_config.json`**
 ***
 
   * Building transaction bodies requires gathering suitable information from the blockchain.  For this purpose, we'll require a provider. So at the project root directory a file named **"config_atlas.json"**, which should have the following format
@@ -174,6 +146,60 @@ cardano-cli address build \
 }
 ```
  * More info about the provider config can be found [here](https://atlas-app.io/getting-started/endpoints#defining-provider-configuration)
+
+
+
+### 6.3 Docker setup
+
+#### 6.3.1a Build docker image
+
+Optionally you can build the image yourself:
+
+```
+docker buildx build \
+  --platform linux/amd64 \
+  -t your-registry/your-image:latest \
+  .
+```
+
+#### 6.3.1b Pull docker image
+
+You can pull the docker image for arm64 from here.
+
+```
+docker pull mariusgeorgescu/wine-tokenization-service:latest
+```
+
+You can pull the docker image for amd64 from here.
+
+```
+docker pull mariusgeorgescu/wine-tokenization-service:amd64
+```
+
+
+* A container of this image will start the ipfs daemon and the wine service (with default test configuration) listening on http://0.0.0.0:8082/  (swagger on http://0.0.0.0:8082/swagger-ui)
+
+
+#### 6.3.2 Run a new containter
+
+Eg. of running the server (with default test configuration) and your user and pass for the Basic Auth:
+
+```
+docker run -d -p 8082:8082 --name wts mariusgeorgescu/wine-tokenization-service:amd64 server <youruser> <yourpassword> 
+```
+
+#### 6.3.3 Add the configuration files
+
+```
+docker cp payment.skey wts:/wine/
+docker cp config_atlas.json wts:/wine/
+```
+
+#### 6.3.4 Restart 
+
+```
+docker restart wts
+```
 
 
 ## 7. Usage

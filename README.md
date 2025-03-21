@@ -101,7 +101,7 @@ You can pull the docker image for amd64 from here.
 docker pull mariusgeorgescu/wine-tokenization-service:amd64
 ```
 
-You build the image yourself with.
+Also you could build the image yourself with.
 
 ```
 docker buildx build \

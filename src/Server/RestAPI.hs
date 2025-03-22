@@ -194,7 +194,7 @@ restAPIapp usr pass ctx =
              in Just
                     simpleCorsResourcePolicy
                         { corsOrigins = fmap (\o -> ([o], True)) originHeader -- Reflect request's Origin dynamically
-                        , corsMethods = ["GET", "POST", "PUT", "DELETE"]
+                        , corsMethods = ["GET", "POST", "PUT", "OPTIONS", "DELETE"]
                         , corsRequestHeaders = simpleHeaders <> [HttpTypes.hAuthorization]
                         , corsExposedHeaders = Just $ simpleHeaders <> [HttpTypes.hAuthorization]
                         , corsVaryOrigin = True

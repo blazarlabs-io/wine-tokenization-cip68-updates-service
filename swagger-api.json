@@ -1,5 +1,9 @@
 {
     "definitions": {
+        "BinaryData": {
+            "format": "binary",
+            "type": "string"
+        },
         "GYAssetClass": {
             "description": "This is an asset class, i.e. either \"lovelace\" or some other token with its minting policy and token name delimited by dot (.).",
             "example": "ff80aaaf03a273b8f5c558168dc0e2377eea810badbae6eceefc14ef.474f4c44",
@@ -173,6 +177,39 @@
         "version": "1.0"
     },
     "paths": {
+        "/add": {
+            "post": {
+                "consumes": [
+                    "application/octet-stream"
+                ],
+                "description": "Add to IPFS",
+                "parameters": [
+                    {
+                        "in": "body",
+                        "name": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/BinaryData"
+                        }
+                    }
+                ],
+                "produces": [
+                    "application/json;charset=utf-8"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid `body`"
+                    }
+                },
+                "summary": "Add to IPFS"
+            }
+        },
         "/tx/{wait 1 conf?}/burn-ref/{Ref NFT id}": {
             "delete": {
                 "description": "Deletes a reference NFT.",

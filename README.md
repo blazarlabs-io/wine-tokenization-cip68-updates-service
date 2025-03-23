@@ -183,14 +183,15 @@ docker pull mariusgeorgescu/wine-tokenization-service:amd64
 
 #### 6.3.2 Run a new containter
 
-Eg. of running the server (with default test configuration) and your user and pass for the Basic Auth:
+It is recommended that you use a volume for ipfs storage to ensure you do not lose data.
+Eg. of running the server (with default test configuration) and 'youruser' 'yourpassword' for the Basic Auth:
 - 4001 (is the IPFS Swarm port)
 - 8080 (is the IPFS Gateway port)
 - 8082 (is the wine server port)
 
 
 ```
-sudo docker run -d  \
+docker run -d  \
   -p 4001:4001 \
   -p 8080:8080 \
   -p 8082:8082 \

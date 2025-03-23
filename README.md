@@ -18,8 +18,9 @@
       - [6.3.3 Add the configuration files](#633-add-the-configuration-files)
       - [6.3.4 Restart](#634-restart)
   - [7. Usage](#7-usage)
-    - [7.1. Deploying validators](#71-deploying-validators)
-    - [7.2. Starting the service](#72-starting-the-service)
+    - [7.1. IPFS API](#71-ipfs-api)
+    - [7.2. Manual -  Deploy validators](#72-manual----deploy-validators)
+    - [7.3. Manual Start the service](#73-manual-start-the-service)
   - [8. License](#8-license)
   - [9. Contributions, Feedback and Support](#9-contributions-feedback-and-support)
   - [10. Future Milestones](#10-future-milestones)
@@ -183,6 +184,10 @@ docker pull mariusgeorgescu/wine-tokenization-service:amd64
 #### 6.3.2 Run a new containter
 
 Eg. of running the server (with default test configuration) and your user and pass for the Basic Auth:
+- 4001 (is the IPFS Swarm port)
+- 8080 (is the IPFS Gateway port)
+- 8082 (is the wine server port)
+
 
 ```
 sudo docker run -d  \
@@ -212,12 +217,7 @@ docker restart wts
 
 ### 7.1. IPFS API
 
-- 4001 (IPFS Swarm port) 
-- 5001 (IPFS API port)
-- 8080 (IPFS Gateway port) 
-
-
-Let's assume you have a local image called image_test.png. You can upload it to IPFS either via the IPFS command line or via a direct HTTP request to the API.
+Let's assume you have a local image called yourimage.png. You can upload it to IPFS either via the IPFS command line or via a direct HTTP request to the API.
 
 ```
 curl -u <youruser>>:<yourpassword> -X POST http://localhost:8082/add \

@@ -7,6 +7,7 @@ import Control.Monad.Except
 import Control.Exception (throw)
 import Control.Exception.Extra (try)
 import Control.Lens ((&), (.~), (?~))
+import Data.ByteString.Lazy qualified as BS
 import Data.List (lookup)
 import Data.Swagger
 import Data.Text.Encoding qualified
@@ -29,11 +30,27 @@ import Offchain.Interactions (
  )
 import Offchain.Operations
 import Offchain.Transactions (runWineTx)
-import RIO qualified as BS
+
+import Data.String
 import RIO.Text qualified as T
 import Servant
 import Servant.Swagger
 import Servant.Swagger.UI
+
+newtype BinaryData = BinaryData {unBinaryData :: BS.ByteString}
+    deriving (Show, Eq, Generic)
+
+-- For Swagger
+instance ToSchema BinaryData where
+  declareNamedSchema _ = pure $ NamedSchema (Just "BinaryData") binarySchema
+
+-- For Servant: allow parsing from application/octet-stream
+instance MimeUnrender OctetStream BinaryData where
+  mimeUnrender _ = Right . BinaryData
+
+-- You may also want to allow encoding (e.g., if responding with binary)
+instance MimeRender OctetStream BinaryData where
+  mimeRender _ = unBinaryData
 
 newtype User = User
     { user :: T.Text
@@ -106,8 +123,15 @@ type WineTxAPI =
                     :> Delete '[JSON] TxResp
            )
 
-type WineAPI = WineTxAPI :<|> WineLookupAPI
-type WineAPIPrivate = BasicAuth "user-realm" User :> (WineTxAPI :<|> WineLookupAPI)
+type IpfsAPI =
+    Summary "Add to IPFS"
+        :> Description "Add to IPFS"
+        :> "add"
+        :> ReqBody '[OctetStream] BinaryData
+        :> Post '[JSON] String
+
+type WineAPI = (WineTxAPI :<|> WineLookupAPI :<|> IpfsAPI)
+type WineAPIPrivate = BasicAuth "user-realm" User :> (WineTxAPI :<|> WineLookupAPI :<|> IpfsAPI)
 
 type WineREST =
     SwaggerSchemaUI "swagger-ui" "swagger-api.json"
@@ -136,7 +160,11 @@ wineServer ctx =
         :<|> const -- usr
             ( txServer ctx -- Tx API
                 :<|> handleGetNFT ctx -- Lookup API
+                :<|> handleAddIPFS -- IPFS API
             )
+
+handleAddIPFS :: BinaryData -> IO String
+handleAddIPFS (BinaryData bs) = addByteStringToIPFS bs
 
 txServer :: WineOffchainContext -> ServerT WineTxAPI IO
 txServer ctx wait =
@@ -179,7 +207,7 @@ handleGetNFT :: WineOffchainContext -> GYAssetClass -> IO WineTokenDT
 handleGetNFT (WineOffchainContext (WineAdminContext{..}) providetCtx) tokenId = do
     w <- runQuery providetCtx $ getWineTokenFromValidator (assetClassToPlutus tokenId) wineValidatorRef
     case w of
-        Left err -> throw $ err400{errBody = BS.fromString err}
+        Left err -> throw $ err400{errBody = fromString err}
         Right wt -> do
             let wtdt = fromWineToken wt
             let d = getTokenData wtdt

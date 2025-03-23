@@ -13,9 +13,6 @@ FROM --platform=$TARGETPLATFORM haskell:9.6.6 AS builder
 ARG TARGETARCH
 ARG TARGETPLATFORM
 
-
-
-
 RUN apt install curl ca-certificates
 RUN install -d /usr/share/postgresql-common/pgdg
 RUN curl -o /usr/share/postgresql-common/pgdg/apt.postgresql.org.asc --fail https://www.postgresql.org/media/keys/ACCC4CF8.asc
@@ -104,6 +101,11 @@ RUN bash /kubo/install.sh
 # Initialize IPFS
 RUN ipfs init
 
+RUN ipfs config Addresses.Gateway /ip4/0.0.0.0/tcp/8080
+RUN ipfs config --json API.HTTPHeaders.Access-Control-Allow-Origin "[\"*\"]"
+RUN ipfs config --json API.HTTPHeaders.Access-Control-Allow-Methods "[\"PUT\", \"GET\", \"POST\"]"
+RUN ipfs config --json API.HTTPHeaders.Access-Control-Allow-Credentials "[\"true\"]"
+
 # Start IPFS daemon
 RUN ipfs daemon &
 
@@ -129,4 +131,3 @@ RUN cabal build all --ghc-options="-optl-Wl,--stub-group-size=0x3FFDFFE"
 RUN cabal install server --ghc-options="-optl-Wl,--stub-group-size=0x3FFDFFE"  
 
 
-CMD ["server"]

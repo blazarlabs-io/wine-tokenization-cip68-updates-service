@@ -186,6 +186,8 @@ Eg. of running the server (with default test configuration) and your user and pa
 
 ```
 sudo docker run -d  \
+  -p 4001:4001 \
+  -p 8080:8080 \
   -p 8082:8082 \
   -v <youripfsvolume>:/root/.ipfs \
   --name wts \
@@ -208,9 +210,35 @@ docker restart wts
 
 ## 7. Usage
 
+### 7.1. IPFS API
+
+- 4001 (IPFS Swarm port) 
+- 5001 (IPFS API port)
+- 8080 (IPFS Gateway port) 
+
+
+Let's assume you have a local image called image_test.png. You can upload it to IPFS either via the IPFS command line or via a direct HTTP request to the API.
+
+```
+curl -u <youruser>>:<yourpassword> -X POST http://localhost:8082/add \
+     -H "Content-Type: application/octet-stream" \
+     --data-binary @yourimage.png
+```
+
+The response will be something like:
+
+```
+ipfs://Qmf3eQRLZNCSGdtcSAYHK1CvSqhEMnTTLshf7xKnJee9h2
+```
+Remember Hash to be able to access the image via IPFS.
+View image via gateway (port 8080).
+Open address in browser:
+```
+ http://127.0.0.1:8080/ipfs/Qmf3eQRLZNCSGdtcSAYHK1CvSqhEMnTTLshf7xKnJee9h2
+```
 
 ***
-### 7.1. Deploying validators
+### 7.2. Manual -  Deploy validators
 ***
 
  * This service requires validators to be deployed and to be used as reference UTxOs in the transactions.  The validators can be deployed with the following command.
@@ -225,7 +253,7 @@ admin deploy-validator payment.skey
 	- a file named **"wine_contract_blueprint"** which contains the validator's blueprint.
 
 ***
-### 7.2. Starting the service
+### 7.3. Manual Start the service
 ***
 
  * Once the validators are deployed, the service can be started with the following command:

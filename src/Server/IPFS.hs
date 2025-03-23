@@ -3,7 +3,8 @@
 module IPFS where
 
 import Control.Exception (throw)
-import Data.ByteString.Lazy.Char8 as CL
+import Data.ByteString.Lazy.Char8 as CL hiding (ByteString)
+import Data.ByteString.Lazy.Char8 qualified as BS
 import Data.Has
 import Network.IPFS
 import Network.IPFS qualified as IPFS
@@ -80,6 +81,27 @@ getFromIPFS cid =
         Right result -> return . Right . decodeUtf8Lenient . Lazy.toStrict $ result
         Left err ->
             return . Left $ err
+
+addByteStringToIPFS :: BS.ByteString -> IO String
+addByteStringToIPFS val = do
+    logOptions' <- logOptionsHandle stderr False
+    let logOptions = setLogUseTime True $ setLogUseLoc True logOptions'
+    processContext <- mkDefaultProcessContext
+    withLogFunc logOptions $ \logFunc -> do
+        let app =
+                MySimpleApp
+                    { saLogFunc = logFunc
+                    , saProcessContext = processContext
+                    , saBinPath = "ipfs"
+                    , saTimeout = 10
+                    }
+        runRIO app $ do
+            result <- addToIPFS val
+            case result of
+                Right cid -> do
+                    liftIO $ print cid
+                    return ("ipfs://" <> Text.unpack cid)
+                Left err -> throw err
 
 addStringToIPFS :: String -> IO String
 addStringToIPFS val = do

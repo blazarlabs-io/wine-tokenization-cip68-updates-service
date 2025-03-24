@@ -16,8 +16,8 @@ import PlutusLedgerApi.V1.Value (AssetClass)
 data TokenMeta
     = TokenMeta
     { name :: String
-    , image :: String
     , description :: String
+    , image :: String
     }
     deriving (Generic, Show, FromJSON, ToJSON, ToSchema)
 

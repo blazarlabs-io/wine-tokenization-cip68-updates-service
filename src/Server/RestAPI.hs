@@ -42,15 +42,15 @@ newtype BinaryData = BinaryData {unBinaryData :: BS.ByteString}
 
 -- For Swagger
 instance ToSchema BinaryData where
-  declareNamedSchema _ = pure $ NamedSchema (Just "BinaryData") binarySchema
+    declareNamedSchema _ = pure $ NamedSchema (Just "BinaryData") binarySchema
 
 -- For Servant: allow parsing from application/octet-stream
 instance MimeUnrender OctetStream BinaryData where
-  mimeUnrender _ = Right . BinaryData
+    mimeUnrender _ = Right . BinaryData
 
 -- You may also want to allow encoding (e.g., if responding with binary)
 instance MimeRender OctetStream BinaryData where
-  mimeRender _ = unBinaryData
+    mimeRender _ = unBinaryData
 
 newtype User = User
     { user :: T.Text
@@ -218,15 +218,22 @@ restAPIapp :: Text -> Text -> WineOffchainContext -> Application
 restAPIapp usr pass ctx =
     cors
         ( \req ->
-            let originHeader = lookup hOrigin (requestHeaders req)
-             in Just
-                    simpleCorsResourcePolicy
-                        { corsOrigins = fmap (\o -> ([o], True)) originHeader -- Reflect request's Origin dynamically
-                        , corsMethods = ["GET", "POST", "PUT", "OPTIONS", "DELETE"]
-                        , corsRequestHeaders = simpleHeaders <> [HttpTypes.hAuthorization]
-                        , corsExposedHeaders = Just $ simpleHeaders <> [HttpTypes.hAuthorization]
-                        , corsVaryOrigin = True
-                        }
+            let
+                originHeader = lookup hOrigin (requestHeaders req)
+             in
+                case originHeader of
+                    Just o ->
+                        Just
+                            simpleCorsResourcePolicy
+                                { corsOrigins = Just ([o], True) -- Reflect request's Origin dynamically
+                                , corsMethods = ["GET", "POST", "PUT", "OPTIONS", "DELETE"]
+                                , corsRequestHeaders = simpleHeaders <> [HttpTypes.hAuthorization]
+                                , corsExposedHeaders = Just $ simpleHeaders <> [HttpTypes.hAuthorization]
+                                , corsVaryOrigin = True
+                                , corsRequireOrigin = False
+                                , corsIgnoreFailures = False
+                                }
+                    Nothing -> Nothing -- If no origin set skips cors headers
         )
         $ serveWithContext wineAPIwithSwagger basicCtx
         $ hoistServerWithContext wineAPIwithSwagger (Proxy :: Proxy '[BasicAuthCheck User]) (Servant.Handler . ExceptT . try)

@@ -45,8 +45,8 @@
             },
             "required": [
                 "name",
-                "image",
-                "description"
+                "description",
+                "image"
             ],
             "type": "object"
         },

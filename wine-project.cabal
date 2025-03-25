@@ -150,6 +150,7 @@ executable server
     , mtl
     , rio
     , servant-server
+    , servant-options
     , servant-swagger
     , servant-swagger-ui
     , servant-swagger-ui-core

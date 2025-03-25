@@ -32,6 +32,7 @@ import Offchain.Operations
 import Offchain.Transactions (runWineTx)
 
 import Data.String
+import Network.Wai.Middleware.Servant.Options (provideOptions)
 import RIO.Text qualified as T
 import Servant
 import Servant.Swagger
@@ -137,6 +138,9 @@ type WineREST =
     SwaggerSchemaUI "swagger-ui" "swagger-api.json"
         :<|> WineAPIPrivate
 
+wineTxAPI :: Proxy WineTxAPI
+wineTxAPI = Proxy
+
 wineAPI :: Proxy WineAPI
 wineAPI = Proxy
 
@@ -235,6 +239,7 @@ restAPIapp usr pass ctx =
                                 }
                     Nothing -> Nothing -- If no origin set skips cors headers
         )
+        $ provideOptions wineTxAPI
         $ serveWithContext wineAPIwithSwagger basicCtx
         $ hoistServerWithContext wineAPIwithSwagger (Proxy :: Proxy '[BasicAuthCheck User]) (Servant.Handler . ExceptT . try)
         $ wineServer ctx

@@ -43,29 +43,39 @@ data WineTokenDT
     deriving (Generic, Show, FromJSON, ToJSON, ToSchema)
 
 fromWineTokenMeta :: WineTokenMeta -> TokenMeta
-fromWineTokenMeta (WineTokenMeta n d i) = TokenMeta (fromBuiltinByteStringUtf8 n) (fromBuiltinByteStringUtf8 d) (fromBuiltinByteStringUtf8 i)
+fromWineTokenMeta WineTokenMeta{..} =
+    TokenMeta
+        { name = fromBuiltinByteStringUtf8 wiName
+        , image = fromBuiltinByteStringUtf8 wiImageURI
+        , description = fromBuiltinByteStringUtf8 wiDesc
+        }
 
 fromWineTokenData :: WineTokenData -> TokenData
-fromWineTokenData (WineTokenData i md is) = TokenData (fromBuiltinByteStringUtf8 i) (fromBuiltinByteStringUtf8 <$> md) (fromBuiltinByteStringUtf8 <$> is)
+fromWineTokenData WineTokenData{..} =
+    TokenData
+        { info = fromBuiltinByteStringUtf8 wdInfoURI
+        , mdata = fromBuiltinByteStringUtf8 <$> wdMaybeDataURI
+        , minscr = fromBuiltinByteStringUtf8 <$> wdMaybeIncriptionsURI
+        }
 
 fromWineToken :: WineToken -> WineTokenDT
 fromWineToken (WineToken m d (BatchToken (BatchQuantity q r))) = Batch (fromWineTokenMeta m) (fromWineTokenData d) (q, r)
 fromWineToken (WineToken m d (BottleToken batchId)) = Bottle (fromWineTokenMeta m) (fromWineTokenData d) (either throw id $ assetClassFromPlutus' batchId)
 
 mkWineBatch :: TokenMeta -> TokenData -> (Integer, Integer) -> WineToken
-mkWineBatch (TokenMeta name image desc) (TokenData info mdatainfo _) (q, r) =
+mkWineBatch (TokenMeta{..}) (TokenData{..}) (q, r) =
     if q #> 0
         then
             WineToken
                 ( WineTokenMeta
                     { wiName = stringToBuiltinByteStringUtf8 name
-                    , wiDesc = stringToBuiltinByteStringUtf8 desc
+                    , wiDesc = stringToBuiltinByteStringUtf8 description
                     , wiImageURI = stringToBuiltinByteStringUtf8 image
                     }
                 )
                 ( WineTokenData
                     { wdInfoURI = stringToBuiltinByteStringUtf8 info
-                    , wdMaybeDataURI = stringToBuiltinByteStringUtf8 #<$> mdatainfo
+                    , wdMaybeDataURI = stringToBuiltinByteStringUtf8 #<$> mdata
                     , wdMaybeIncriptionsURI = Nothing
                     }
                 )
@@ -75,17 +85,17 @@ mkWineBatch (TokenMeta name image desc) (TokenData info mdatainfo _) (q, r) =
         else throw $ CustomException "invalid quantity"
 
 mkWineBottle :: TokenMeta -> TokenData -> AssetClass -> WineToken
-mkWineBottle (TokenMeta name image desc) (TokenData info mdatainfo minscr) batchId =
+mkWineBottle (TokenMeta{..}) (TokenData{..}) batchId =
     WineToken
         ( WineTokenMeta
             { wiName = stringToBuiltinByteStringUtf8 name
-            , wiDesc = stringToBuiltinByteStringUtf8 desc
+            , wiDesc = stringToBuiltinByteStringUtf8 description
             , wiImageURI = stringToBuiltinByteStringUtf8 image
             }
         )
         ( WineTokenData
             { wdInfoURI = stringToBuiltinByteStringUtf8 info
-            , wdMaybeDataURI = stringToBuiltinByteStringUtf8 #<$> mdatainfo
+            , wdMaybeDataURI = stringToBuiltinByteStringUtf8 #<$> mdata
             , wdMaybeIncriptionsURI = stringToBuiltinByteStringUtf8 #<$> minscr
             }
         )

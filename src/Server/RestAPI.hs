@@ -38,6 +38,10 @@ import Servant
 import Servant.Swagger
 import Servant.Swagger.UI
 
+-- added hydra types and client
+import Onchain.HydraType
+import Offchain.HydraOperation
+
 newtype BinaryData = BinaryData {unBinaryData :: BS.ByteString}
     deriving (Show, Eq, Generic)
 
@@ -131,8 +135,29 @@ type IpfsAPI =
         :> ReqBody '[OctetStream] BinaryData
         :> Post '[JSON] String
 
-type WineAPI = (WineTxAPI :<|> WineLookupAPI :<|> IpfsAPI)
-type WineAPIPrivate = BasicAuth "user-realm" User :> (WineTxAPI :<|> WineLookupAPI :<|> IpfsAPI)
+-- added commit and decomit api
+
+type CommitDecommitAPI =
+    Summary "Commit to Hydra"
+        :> Description "Commit to Hydra"
+        :> "commit"
+        :> ReqBody '[JSON] CommitRequest
+        :> Post '[JSON] String
+    -- :<|> Summary "Update token metadata in Hydra head"
+    --     :> Description "Update token metadata in Hydra head"
+    --     :> "update"
+    --     :> ReqBody '[JSON] UpdateRequest
+    --     :> Post '[JSON] String
+    -- :<|> Summary "Decommit from Hydra"
+    --     :> Description "Decommit from Hydra"
+    --     :> "decommit" 
+    --     :> ReqBody '[JSON] DecommitRequest 
+    --     :> Post '[JSON] String
+
+---
+
+type WineAPI = (WineTxAPI :<|> WineLookupAPI :<|> IpfsAPI :<|> CommitDecommitAPI)
+type WineAPIPrivate = BasicAuth "user-realm" User :> (WineTxAPI :<|> WineLookupAPI :<|> IpfsAPI :<|> CommitDecommitAPI)
 
 type WineREST =
     SwaggerSchemaUI "swagger-ui" "swagger-api.json"
@@ -165,6 +190,7 @@ wineServer ctx =
             ( txServer ctx -- Tx API
                 :<|> handleGetNFT ctx -- Lookup API
                 :<|> handleAddIPFS -- IPFS API
+                :<|> hydraServer ctx -- added commit and decommit api
             )
 
 handleAddIPFS :: BinaryData -> IO String
@@ -178,6 +204,39 @@ txServer ctx wait =
         :<|> handleUpdateBottleTx ctx wait
         :<|> handleBurnUserTx ctx wait
         :<|> handleBurnRefTx ctx wait
+
+-- added part for commit and decommit
+hydraServer :: WineOffchainContext -> ServerT CommitDecommitAPI IO
+hydraServer ctx = 
+    handleCommit ctx
+        -- :<|> handleUpdate ctx
+        -- :<|> handleDecommit ctx
+
+handleCommit :: WineOffchainContext -> CommitRequest -> IO String
+handleCommit ctx req = do
+    let tid = tokenId req
+        amt = amount req
+    mUtxo <- findNFTUtxo tid amt
+    case mUtxo of
+      Just utxo -> commitUTxO utxo >> return "Committed"
+      Nothing -> return "NFT not found"
+
+-- handleUpdate :: WineOffchainContext -> UpdateRequest -> IO String
+-- handleUpdate ctx (UpdateRequest tid newMetadata) = do
+--     mUtxo <- findNFTUtxo tid
+--     case mUtxo of
+--       Just utxo -> do
+--           updateNFTMetadata tid newMeta
+--           return "Updated"
+--       Nothing -> return "NFT not found"
+
+-- handleDecommit :: WineOffchainContext -> DecommitRequest -> IO String
+-- handleDecommit ctx (DecommitRequest tid) = do
+--      mUtxo <- findNFTUtxo tid
+--      case mUtxo of
+--       Just utxo -> decommitUtxo utxo >> return "Decommitted"
+--       Nothing -> return "NFT not found"
+----
 
 handleMintBatchTx :: WineOffchainContext -> Bool -> WineBatchDTO -> IO TxResp
 handleMintBatchTx ctx wait (WineBatchDTO i d s) = do

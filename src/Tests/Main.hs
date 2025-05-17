@@ -23,6 +23,7 @@ runTest =
                 --     , updateBatchPrivnet setup
                 --     , mintBottlePrivnet setup
                 --     , updateBottlePrivnet setup
+                --     , hydraTestsPrivnet setup
                 --     ]
             ]
         )

@@ -7,7 +7,7 @@
 FROM --platform=$TARGETPLATFORM haskell:9.6.6 AS builder
 
 ##
-# Let’s define architecture/platform arguments so we can do architecture-
+# Let's define architecture/platform arguments so we can do architecture-
 # specific tasks (e.g., download the correct IPFS binary).
 ##
 ARG TARGETARCH
@@ -59,6 +59,9 @@ ENV PATH="/root/.cabal/bin:/root/.local/bin:$PATH"
 
 RUN git clone https://github.com/IntersectMBO/libsodium && \
     cd libsodium && \
+    curl -L -o build-aux/config.guess https://git.savannah.gnu.org/gitweb/?p=config.git;a=blob_plain;f=config.guess;hb=HEAD && \
+    curl -L -o build-aux/config.sub https://git.savannah.gnu.org/gitweb/?p=config.git;a=blob_plain;f=config.sub;hb=HEAD && \
+    chmod +x build-aux/config.guess build-aux/config.sub && \
     git fetch --all --recurse-submodules --tags && \
     git tag && \
     ./autogen.sh && \
@@ -66,6 +69,7 @@ RUN git clone https://github.com/IntersectMBO/libsodium && \
     make && \
     make install && \
     cd .. && rm -rf libsodium
+    
 ENV LD_LIBRARY_PATH="/usr/local/lib:$LD_LIBRARY_PATH"
 ENV PKG_CONFIG_PATH="/usr/local/lib/pkgconfig:$PKG_CONFIG_PATH"
 
@@ -129,5 +133,13 @@ RUN cabal build all --ghc-options="-optl-Wl,--stub-group-size=0x3FFDFFE"
 
 # Add and Install Application Code
 RUN cabal install server --ghc-options="-optl-Wl,--stub-group-size=0x3FFDFFE"  
+
+# Copy and set up startup script
+COPY start.sh /wine/start.sh
+RUN chmod +x /wine/start.sh
+
+# Set the entrypoint
+ENTRYPOINT ["/wine/start.sh"]
+CMD ["server"]
 
 

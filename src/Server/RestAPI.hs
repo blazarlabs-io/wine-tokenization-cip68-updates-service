@@ -41,6 +41,7 @@ import Servant.Swagger.UI
 -- added hydra types and client
 import Onchain.HydraType
 import Offchain.HydraOperation
+import Server.Pinata
 
 newtype BinaryData = BinaryData {unBinaryData :: BS.ByteString}
     deriving (Show, Eq, Generic)
@@ -194,7 +195,8 @@ wineServer ctx =
             )
 
 handleAddIPFS :: BinaryData -> IO String
-handleAddIPFS (BinaryData bs) = addByteStringToIPFS bs
+--handleAddIPFS (BinaryData bs) = addByteStringToIPFS bs
+handleAddIPFS (BinaryData bs) = addByteStringToPinata bs
 
 txServer :: WineOffchainContext -> ServerT WineTxAPI IO
 txServer ctx wait =
@@ -215,8 +217,7 @@ hydraServer ctx =
 handleCommit :: WineOffchainContext -> CommitRequest -> IO String
 handleCommit ctx req = do
     let tid = tokenId req
-        amt = amount req
-    mUtxo <- findNFTUtxo tid amt
+    mUtxo <- findNFTUtxo tid 0  -- Amount is ignored now
     case mUtxo of
       Just utxo -> commitUTxO utxo >> return "Committed"
       Nothing -> return "NFT not found"
@@ -240,22 +241,26 @@ handleCommit ctx req = do
 
 handleMintBatchTx :: WineOffchainContext -> Bool -> WineBatchDTO -> IO TxResp
 handleMintBatchTx ctx wait (WineBatchDTO i d s) = do
-    d' <- addTokenDataToIPFS d
+    --d' <- addTokenDataToIPFS d
+    d' <- addTokenDataToPinata d
     mkTxResp <$> runWineTx wait ctx (WineInteraction MintBatch (Just (Batch i d' s)))
 
 handleMintBottleTx :: WineOffchainContext -> Bool -> WineBottleDTO -> IO TxResp
 handleMintBottleTx ctx wait (WineBottleDTO i d s) = do
-    d' <- addTokenDataToIPFS d
+    --d' <- addTokenDataToIPFS d
+    d' <- addTokenDataToPinata d
     mkTxResp <$> runWineTx wait ctx (WineInteraction MintBottle (Just (Bottle i d' s)))
 
 handleUpdateBatchTx :: WineOffchainContext -> Bool -> GYAssetClass -> WineBatchDTO -> IO TxResp
 handleUpdateBatchTx ctx wait batchId (WineBatchDTO i d s) = do
-    d' <- addTokenDataToIPFS d
+    --d' <- addTokenDataToIPFS d
+    d' <- addTokenDataToPinata d
     mkTxResp <$> runWineTx wait ctx (WineInteraction (UpdateBatch batchId) (Just (Batch i d' s)))
 
 handleUpdateBottleTx :: WineOffchainContext -> Bool -> GYAssetClass -> WineBottleDTO -> IO TxResp
 handleUpdateBottleTx ctx wait bottleId (WineBottleDTO i d s) = do
-    d' <- addTokenDataToIPFS d
+    --d' <- addTokenDataToIPFS d
+    d' <- addTokenDataToPinata d
     mkTxResp <$> runWineTx wait ctx (WineInteraction (UpdateBottle bottleId) (Just (Bottle i d' s)))
 
 handleBurnUserTx :: WineOffchainContext -> Bool -> GYAssetClass -> IO TxResp
@@ -274,7 +279,8 @@ handleGetNFT (WineOffchainContext (WineAdminContext{..}) providetCtx) tokenId = 
         Right wt -> do
             let wtdt = fromWineToken wt
             let d = getTokenData wtdt
-            d' <- getTokenDataFromIPFS d
+            --d' <- getTokenDataFromIPFS d
+            d' <- getTokenDataFromPinata d
             return $ updateTokenData wtdt d'
 
 restAPIapp :: Text -> Text -> WineOffchainContext -> Application

@@ -8,18 +8,7 @@ extra-doc-files: README.md
 common options
   ghc-options:        -Wall
   default-language:   GHC2021
-  build-depends:      
-    base >=4.18.2.0 && <5,
-    aeson,
-    bytestring,
-    containers,
-    http-client,
-    http-client-tls,
-    http-conduit,
-    unordered-containers,
-    process,
-    text,
-    scientific
+  build-depends:      base >=4.18.2.0 && <5
   mixins:             base hiding (Prelude)
   default-extensions:
     DataKinds
@@ -88,12 +77,13 @@ library
     Offchain.Operations
     Offchain.Transactions
     Offchain.Validators
-    Offchain.HydraOperation
     Onchain.Blueprint
     Onchain.OnchainUtils
     Onchain.Types
-    Onchain.HydraType
     Onchain.WineValidator
+    Offchain.HydraOperation
+    Onchain.HydraType
+    Server.Pinata
     Parameters
     Prelude
 
@@ -108,12 +98,16 @@ library
     , swagger2
     , text
     , mtl
-    , rio
+    , unordered-containers
+    , data-has
     , http-client
     , http-client-tls
+    , http-types
+    , rio
+    , hashable
     , http-conduit
-    , unordered-containers
     , process
+    , scientific
 
   --- Cardano specific dependencies
   build-depends:
@@ -134,13 +128,10 @@ test-suite wine-project-tests
 
   build-depends:  wine-project
   build-depends:
-    , base >=4.18.2.0 && <5
     , extra
     , mtl
     , tasty
     , tasty-quickcheck
-    , unordered-containers
-    , text
 
   --- Cardano specific dependencies
   build-depends:
@@ -148,13 +139,6 @@ test-suite wine-project-tests
     , clb
     , plutus-ledger-api
     , plutus-tx
-
-  mixins:         base hiding (Prelude)
-  default-extensions:
-    DataKinds
-    LambdaCase
-    OverloadedStrings
-    RecordWildCards
 
 executable server
   import:         options
@@ -190,6 +174,12 @@ executable server
     , wai
     , wai-cors
     , warp
+    , http-client         ^>=0.7
+    , http-client-tls     ^>=0.3
+    , hashable            ^>=1.4
+    , http-conduit
+    , process
+    , scientific
 
   --- Cardano specific dependencies
   build-depends:  atlas-cardano
@@ -217,6 +207,9 @@ executable admin
     , bytestring  ^>=0.11.5
     , haskeline
     , mtl
+    , http-conduit
+    , process
+    , scientific
 
   --- Cardano specific dependencies
   build-depends:  atlas-cardano

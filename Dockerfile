@@ -113,19 +113,29 @@ RUN ipfs config --json API.HTTPHeaders.Access-Control-Allow-Credentials "[\"true
 # Start IPFS daemon
 RUN ipfs daemon &
 
-# Install the project
-WORKDIR /wine
+# Set environment variables for Plutus
+ENV BLST_REF=master
+ENV CABAL_BUILD_OPTIONS="--with-ghc=ghc-9.6.6 --allow-newer=plutus-tx-plugin:ghc-prim"
 
-COPY *.cabal cabal.project /wine/
+# Create build directory
+WORKDIR /build
 
+# Copy only the main cabal file and create a simplified cabal.project
+COPY wine-project.cabal ./
+COPY cabal.project ./
+
+# Create cabal config directory and update
+RUN mkdir -p /root/.config/cabal
 RUN cabal update
 
 # Docker will cache this command as a layer, freeing us up to
 # modify source code without re-installing dependencies
 # (unless the .cabal file changes!)
-RUN cabal build --only-dependencies -j10
 
-COPY . /wine
+RUN cabal build --only-dependencies -j10 ${CABAL_BUILD_OPTIONS}
+
+# Copy the rest of the source code
+COPY . .
 
 RUN update-alternatives --install /usr/bin/ld ld /usr/bin/ld.bfd 100
 

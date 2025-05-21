@@ -15,13 +15,11 @@ main :: IO ()
 main = do
     args <- getArgs
     case args of
-        [tokenId, amount] -> do
+        [tokenId, _] -> do  -- Changed to ignore amount
             let tokenIdText = T.pack tokenId
-            -- let amountInt = fromMaybe 0 (readMaybe amount :: Maybe Integer)
-            let amountInt = Data.Maybe.fromMaybe 0 (readMaybe amount :: Maybe Integer)
 
-            putStrLn $ "Searching for UTXO with token: " ++ tokenId ++ " and amount: " ++ show amountInt
-            maybeUtxo <- findNFTUtxo tokenIdText amountInt
+            putStrLn $ "Searching for UTXO with token: " ++ tokenId
+            maybeUtxo <- findNFTUtxo tokenIdText 0  -- Amount is ignored now
             
             case maybeUtxo of
                 Just utxo -> do

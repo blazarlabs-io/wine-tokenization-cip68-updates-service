@@ -42,7 +42,7 @@ pinataGatewayUrl = "https://gateway.pinata.cloud"
 getPinataCredentials :: IO (Text, Text)
 getPinataCredentials = do
     apiKey <- getEnv "PINATA_API_KEY"
-    secretKey <- getEnv "PINATA_SECRET_KEY"
+    secretKey <- getEnv "PINATA_SECRET_API_KEY"
     return (T.pack apiKey, T.pack secretKey)
 
 data MySimpleApp = MySimpleApp

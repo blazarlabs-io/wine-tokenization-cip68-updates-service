@@ -213,3 +213,18 @@ executable admin
 
   --- Cardano specific dependencies
   build-depends:  atlas-cardano
+
+executable test-pinata
+  import:         options
+  main-is:        test-pinata.hs
+  hs-source-dirs: test
+  build-depends:  wine-project
+  build-depends:
+    , aeson
+    , bytestring
+    , http-client
+    , http-client-tls
+    , rio
+    , text
+    , mtl
+    , process

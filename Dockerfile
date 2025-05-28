@@ -144,12 +144,12 @@ RUN cabal build all --ghc-options="-optl-Wl,--stub-group-size=0x3FFDFFE"
 # Add and Install Application Code
 RUN cabal install server --ghc-options="-optl-Wl,--stub-group-size=0x3FFDFFE"  
 
-# Copy and set up startup script
-COPY start.sh /wine/start.sh
-RUN chmod +x /wine/start.sh
+# # Copy and set up startup script
+# COPY start.sh /wine/start.sh
+# RUN chmod +x /wine/start.sh
 
-# Set the entrypoint
-ENTRYPOINT ["/wine/start.sh"]
-CMD ["server"]
+# # Set the entrypoint
+# ENTRYPOINT ["/wine/start.sh"]
+# CMD ["server"]
 
 

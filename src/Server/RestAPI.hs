@@ -129,9 +129,9 @@ type WineTxAPI =
                     :> Delete '[JSON] TxResp
            )
 
-type IpfsAPI =
-    Summary "Add to IPFS"
-        :> Description "Add to IPFS"
+type PinataAPI =
+    Summary "Add to Pinata"
+        :> Description "Add to Pinata"
         :> "add"
         :> ReqBody '[OctetStream] BinaryData
         :> Post '[JSON] String
@@ -157,8 +157,8 @@ type CommitDecommitAPI =
 
 ---
 
-type WineAPI = (WineTxAPI :<|> WineLookupAPI :<|> IpfsAPI :<|> CommitDecommitAPI)
-type WineAPIPrivate = BasicAuth "user-realm" User :> (WineTxAPI :<|> WineLookupAPI :<|> IpfsAPI :<|> CommitDecommitAPI)
+type WineAPI = (WineTxAPI :<|> WineLookupAPI :<|> PinataAPI :<|> CommitDecommitAPI)
+type WineAPIPrivate = BasicAuth "user-realm" User :> (WineTxAPI :<|> WineLookupAPI :<|> PinataAPI :<|> CommitDecommitAPI)
 
 type WineREST =
     SwaggerSchemaUI "swagger-ui" "swagger-api.json"
@@ -190,13 +190,13 @@ wineServer ctx =
         :<|> const -- usr
             ( txServer ctx -- Tx API
                 :<|> handleGetNFT ctx -- Lookup API
-                :<|> handleAddIPFS -- IPFS API
+                :<|> handleAddPinata -- Pinata API
                 :<|> hydraServer ctx -- added commit and decommit api
             )
 
-handleAddIPFS :: BinaryData -> IO String
---handleAddIPFS (BinaryData bs) = addByteStringToIPFS bs
-handleAddIPFS (BinaryData bs) = addByteStringToPinata bs
+handleAddPinata :: BinaryData -> IO String
+--handleAddPinata (BinaryData bs) = addByteStringToIPFS bs
+handleAddPinata (BinaryData bs) = addByteStringToPinata bs
 
 txServer :: WineOffchainContext -> ServerT WineTxAPI IO
 txServer ctx wait =

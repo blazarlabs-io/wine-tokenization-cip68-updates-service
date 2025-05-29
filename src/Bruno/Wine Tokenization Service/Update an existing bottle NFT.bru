@@ -1,0 +1,16 @@
+meta {
+  name: Update an existing bottle NFT
+  type: http
+  seq: 6
+}
+
+put {
+  url: {{baseUrl}}/tx/:wait/update-bottle/:bottleId
+  body: none
+  auth: none
+}
+
+params:path {
+  wait: 
+  bottleId: 
+}

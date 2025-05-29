@@ -1,0 +1,16 @@
+meta {
+  name: Burn a reference wine NFT
+  type: http
+  seq: 1
+}
+
+delete {
+  url: {{baseUrl}}/tx/:wait/burn-ref/:tokenId
+  body: none
+  auth: none
+}
+
+params:path {
+  wait: 
+  tokenId: 
+}

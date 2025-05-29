@@ -1,0 +1,35 @@
+meta {
+  name: Mint a new batch NFT
+  type: http
+  seq: 3
+}
+
+post {
+  url: {{baseUrl}}/tx/true/mint-batch
+  body: json
+  auth: basic
+}
+
+auth:basic {
+  username: cardano
+  password: lovelace
+}
+
+body:json {
+  {
+    "batch_data": {
+      "info": "{ ...}",
+      "mdata": "{.....}",
+      "minscr": "{...}"
+    },
+    "batch_meta": {
+      "description": "string",
+      "image": "string",
+      "name": "string"
+    },
+    "batch_quantity": [
+      100,
+      100
+    ]
+  }
+}

@@ -1,0 +1,479 @@
+{
+    "definitions": {
+        "BinaryData": {
+            "format": "binary",
+            "type": "string"
+        },
+        "GYAssetClass": {
+            "description": "This is an asset class, i.e. either \"lovelace\" or some other token with its minting policy and token name delimited by dot (.).",
+            "example": "ff80aaaf03a273b8f5c558168dc0e2377eea810badbae6eceefc14ef.474f4c44",
+            "type": "string"
+        },
+        "GYTxId": {
+            "description": "Transaction id",
+            "example": "a8d75b90a052302c1232bedd626720966b1697fe38de556c617c340233688935",
+            "type": "string"
+        },
+        "TokenData": {
+            "properties": {
+                "info": {
+                    "type": "string"
+                },
+                "mdata": {
+                    "type": "string"
+                },
+                "minscr": {
+                    "type": "string"
+                }
+            },
+            "required": [
+                "info"
+            ],
+            "type": "object"
+        },
+        "TokenMeta": {
+            "properties": {
+                "description": {
+                    "type": "string"
+                },
+                "image": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                }
+            },
+            "required": [
+                "name",
+                "description",
+                "image"
+            ],
+            "type": "object"
+        },
+        "TxResp": {
+            "properties": {
+                "tokenRefId": {
+                    "$ref": "#/definitions/GYAssetClass"
+                },
+                "txId": {
+                    "$ref": "#/definitions/GYTxId"
+                }
+            },
+            "required": [
+                "txId"
+            ],
+            "type": "object"
+        },
+        "WineBatchDTO": {
+            "properties": {
+                "batch_data": {
+                    "$ref": "#/definitions/TokenData"
+                },
+                "batch_meta": {
+                    "$ref": "#/definitions/TokenMeta"
+                },
+                "batch_quantity": {
+                    "items": [
+                        {
+                            "type": "integer"
+                        },
+                        {
+                            "type": "integer"
+                        }
+                    ],
+                    "maxItems": 2,
+                    "minItems": 2,
+                    "type": "array"
+                }
+            },
+            "required": [
+                "batch_meta",
+                "batch_data",
+                "batch_quantity"
+            ],
+            "type": "object"
+        },
+        "WineBottleDTO": {
+            "properties": {
+                "bottle_batch_id": {
+                    "$ref": "#/definitions/GYAssetClass"
+                },
+                "bottle_data": {
+                    "$ref": "#/definitions/TokenData"
+                },
+                "bottle_meta": {
+                    "$ref": "#/definitions/TokenMeta"
+                }
+            },
+            "required": [
+                "bottle_meta",
+                "bottle_data",
+                "bottle_batch_id"
+            ],
+            "type": "object"
+        },
+        "WineTokenDT": {
+            "maxProperties": 1,
+            "minProperties": 1,
+            "properties": {
+                "Batch": {
+                    "properties": {
+                        "batch_data": {
+                            "$ref": "#/definitions/TokenData"
+                        },
+                        "batch_meta": {
+                            "$ref": "#/definitions/TokenMeta"
+                        },
+                        "batch_quantity": {
+                            "items": [
+                                {
+                                    "type": "integer"
+                                },
+                                {
+                                    "type": "integer"
+                                }
+                            ],
+                            "maxItems": 2,
+                            "minItems": 2,
+                            "type": "array"
+                        }
+                    },
+                    "required": [
+                        "batch_meta",
+                        "batch_data",
+                        "batch_quantity"
+                    ],
+                    "type": "object"
+                },
+                "Bottle": {
+                    "properties": {
+                        "bottle_batch_id": {
+                            "$ref": "#/definitions/GYAssetClass"
+                        },
+                        "bottle_data": {
+                            "$ref": "#/definitions/TokenData"
+                        },
+                        "bottle_meta": {
+                            "$ref": "#/definitions/TokenMeta"
+                        }
+                    },
+                    "required": [
+                        "bottle_meta",
+                        "bottle_data",
+                        "bottle_batch_id"
+                    ],
+                    "type": "object"
+                }
+            },
+            "type": "object"
+        }
+    },
+    "info": {
+        "description": "This is an API for tokenizing batches and bottles of wine",
+        "license": {
+            "name": "GPL-3.0 license"
+        },
+        "title": "Wine Tokenization Service",
+        "version": "1.0"
+    },
+    "paths": {
+        "/add": {
+            "post": {
+                "consumes": [
+                    "application/octet-stream"
+                ],
+                "description": "Add to IPFS",
+                "parameters": [
+                    {
+                        "in": "body",
+                        "name": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/BinaryData"
+                        }
+                    }
+                ],
+                "produces": [
+                    "application/json;charset=utf-8"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid `body`"
+                    }
+                },
+                "summary": "Add to IPFS"
+            }
+        },
+        "/tx/{wait 1 conf?}/burn-ref/{Ref NFT id}": {
+            "delete": {
+                "description": "Deletes a reference NFT.",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "wait 1 conf?",
+                        "required": true,
+                        "type": "boolean"
+                    },
+                    {
+                        "in": "path",
+                        "name": "Ref NFT id",
+                        "required": true,
+                        "type": "string"
+                    }
+                ],
+                "produces": [
+                    "application/json;charset=utf-8"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "schema": {
+                            "$ref": "#/definitions/TxResp"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid `Ref NFT id` or `wait 1 conf?`"
+                    }
+                },
+                "summary": "Burn a reference wine NFT"
+            }
+        },
+        "/tx/{wait 1 conf?}/burn-user/{User NFT id}": {
+            "delete": {
+                "description": "Deletes an NFT that belongs to a user.",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "wait 1 conf?",
+                        "required": true,
+                        "type": "boolean"
+                    },
+                    {
+                        "in": "path",
+                        "name": "User NFT id",
+                        "required": true,
+                        "type": "string"
+                    }
+                ],
+                "produces": [
+                    "application/json;charset=utf-8"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "schema": {
+                            "$ref": "#/definitions/TxResp"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid `User NFT id` or `wait 1 conf?`"
+                    }
+                },
+                "summary": "Burn a user-owned wine NFT"
+            }
+        },
+        "/tx/{wait 1 conf?}/mint-batch": {
+            "post": {
+                "consumes": [
+                    "application/json;charset=utf-8"
+                ],
+                "description": "Creates a new batch NFT with metadata and initial quantity.",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "wait 1 conf?",
+                        "required": true,
+                        "type": "boolean"
+                    },
+                    {
+                        "in": "body",
+                        "name": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/WineBatchDTO"
+                        }
+                    }
+                ],
+                "produces": [
+                    "application/json;charset=utf-8"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "schema": {
+                            "$ref": "#/definitions/TxResp"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid `body` or `wait 1 conf?`"
+                    }
+                },
+                "summary": "Mint a new batch NFT"
+            }
+        },
+        "/tx/{wait 1 conf?}/mint-bottle": {
+            "post": {
+                "consumes": [
+                    "application/json;charset=utf-8"
+                ],
+                "description": "Creates a new bottle NFT under an existing batch.",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "wait 1 conf?",
+                        "required": true,
+                        "type": "boolean"
+                    },
+                    {
+                        "in": "body",
+                        "name": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/WineBottleDTO"
+                        }
+                    }
+                ],
+                "produces": [
+                    "application/json;charset=utf-8"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "schema": {
+                            "$ref": "#/definitions/TxResp"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid `body` or `wait 1 conf?`"
+                    }
+                },
+                "summary": "Mint a new bottle NFT"
+            }
+        },
+        "/tx/{wait 1 conf?}/update-batch/{Batch Ref NFT id}": {
+            "put": {
+                "consumes": [
+                    "application/json;charset=utf-8"
+                ],
+                "description": "Modifies metadata and token data of a batch NFT.",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "wait 1 conf?",
+                        "required": true,
+                        "type": "boolean"
+                    },
+                    {
+                        "in": "path",
+                        "name": "Batch Ref NFT id",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "in": "body",
+                        "name": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/WineBatchDTO"
+                        }
+                    }
+                ],
+                "produces": [
+                    "application/json;charset=utf-8"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "schema": {
+                            "$ref": "#/definitions/TxResp"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid `body` or `Batch Ref NFT id` or `wait 1 conf?`"
+                    }
+                },
+                "summary": "Update an existing batch NFT"
+            }
+        },
+        "/tx/{wait 1 conf?}/update-bottle/{Bottle ref NFT id}": {
+            "put": {
+                "consumes": [
+                    "application/json;charset=utf-8"
+                ],
+                "description": "Modifies metadata and token data of a bottle NFT.",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "wait 1 conf?",
+                        "required": true,
+                        "type": "boolean"
+                    },
+                    {
+                        "in": "path",
+                        "name": "Bottle ref NFT id",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "in": "body",
+                        "name": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/WineBottleDTO"
+                        }
+                    }
+                ],
+                "produces": [
+                    "application/json;charset=utf-8"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "schema": {
+                            "$ref": "#/definitions/TxResp"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid `body` or `Bottle ref NFT id` or `wait 1 conf?`"
+                    }
+                },
+                "summary": "Update an existing bottle NFT"
+            }
+        },
+        "/wine/{Token Id}": {
+            "get": {
+                "description": "Fetches Wine NFT information based on the given token ID.",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "Token Id",
+                        "required": true,
+                        "type": "string"
+                    }
+                ],
+                "produces": [
+                    "application/json;charset=utf-8"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "schema": {
+                            "$ref": "#/definitions/WineTokenDT"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid `Token Id`"
+                    }
+                },
+                "summary": "Retrieve wine NFT details"
+            }
+        }
+    },
+    "swagger": "2.0"
+}

@@ -278,7 +278,7 @@ Use the following channels for support or feedback:
 
 1. Report bugs or suggest features via [GitHub Issues] .
 2. Join the Conversation: [GitHub Discussions] .
-3. Submit pull requests (PRs) that align with the project’s goals.
+3. Submit pull requests (PRs) that align with the project's goals.
 
 ## 10. Future Milestones
 

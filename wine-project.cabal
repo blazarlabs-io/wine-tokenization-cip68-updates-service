@@ -184,17 +184,6 @@ executable server
   --- Cardano specific dependencies
   build-depends:  atlas-cardano
 
--- , utf8-string
--- , http-types       ^>=0.12.4
-
--- , transformers     ^>=0.6.1
--- , wai-websockets
--- , websockets
--- , servant-conduit
--- , conduit
--- , servant-event-stream
-
-
 executable admin
   import:         options
   main-is:        Main.hs

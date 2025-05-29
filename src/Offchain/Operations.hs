@@ -132,12 +132,6 @@ addRefScriptToAddressSkeleton addr sc = do
     return $ mustHaveOutput (mkGYTxOut addr mempty (datumFromPlutusData ())){gyTxOutRefS = Just $ GYPlutusScript sc}
 
 --------
---------
---------
---------
---------
---------
---------
 
 -- |  Mint Batch Token Transaction Skeleton
 newBatchSk ::

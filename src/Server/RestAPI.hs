@@ -3,7 +3,6 @@
 module RestAPI where
 
 import Control.Monad.Except
-
 import Control.Exception (throw)
 import Control.Exception.Extra (try)
 import Control.Lens ((&), (.~), (?~))
@@ -30,15 +29,12 @@ import Offchain.Interactions (
  )
 import Offchain.Operations
 import Offchain.Transactions (runWineTx)
-
 import Data.String
 import Network.Wai.Middleware.Servant.Options (provideOptions)
 import RIO.Text qualified as T
 import Servant
 import Servant.Swagger
 import Servant.Swagger.UI
-
--- added hydra types and client
 import Onchain.HydraType
 import Offchain.HydraOperation
 import Server.Pinata
@@ -136,8 +132,6 @@ type PinataAPI =
         :> ReqBody '[OctetStream] BinaryData
         :> Post '[JSON] String
 
--- added commit and decomit api
-
 type CommitDecommitAPI =
     Summary "Commit to Hydra"
         :> Description "Commit to Hydra"
@@ -154,8 +148,6 @@ type CommitDecommitAPI =
     --     :> "decommit" 
     --     :> ReqBody '[JSON] DecommitRequest 
     --     :> Post '[JSON] String
-
----
 
 type WineAPI = (WineTxAPI :<|> WineLookupAPI :<|> PinataAPI :<|> CommitDecommitAPI)
 type WineAPIPrivate = BasicAuth "user-realm" User :> (WineTxAPI :<|> WineLookupAPI :<|> PinataAPI :<|> CommitDecommitAPI)
@@ -195,7 +187,6 @@ wineServer ctx =
             )
 
 handleAddPinata :: BinaryData -> IO String
---handleAddPinata (BinaryData bs) = addByteStringToIPFS bs
 handleAddPinata (BinaryData bs) = addByteStringToPinata bs
 
 txServer :: WineOffchainContext -> ServerT WineTxAPI IO
@@ -237,7 +228,6 @@ handleCommit ctx req = do
 --      case mUtxo of
 --       Just utxo -> decommitUtxo utxo >> return "Decommitted"
 --       Nothing -> return "NFT not found"
-----
 
 handleMintBatchTx :: WineOffchainContext -> Bool -> WineBatchDTO -> IO TxResp
 handleMintBatchTx ctx wait (WineBatchDTO i d s) = do
@@ -279,7 +269,6 @@ handleGetNFT (WineOffchainContext (WineAdminContext{..}) providetCtx) tokenId = 
         Right wt -> do
             let wtdt = fromWineToken wt
             let d = getTokenData wtdt
-            --d' <- getTokenDataFromIPFS d
             d' <- getTokenDataFromPinata d
             return $ updateTokenData wtdt d'
 

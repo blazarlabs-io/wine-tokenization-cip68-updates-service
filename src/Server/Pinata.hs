@@ -8,7 +8,6 @@ import Data.ByteString.Lazy.Char8 as CL hiding (ByteString)
 import Data.ByteString.Lazy.Char8 qualified as BS
 import qualified Data.ByteString.Char8 as BS8
 import qualified Data.ByteString.Short as SBS
-
 import Data.Has
 import Network.HTTP.Client
 import Network.HTTP.Client.TLS
@@ -230,3 +229,4 @@ getTokenDataFromPinata (TokenData i d s) = do
     mdata <- mapM getStringFromPinata d
     mins <- mapM getStringFromPinata s
     return (TokenData info mdata mins) 
+    

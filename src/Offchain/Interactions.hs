@@ -146,3 +146,4 @@ interactionToTxSkeleton (WineInteractionCtx wineValidatorRef adminAddr) interact
         WineInteraction (BurnUserToken tokenId) Nothing -> (,Nothing) <$> burnUserToken wineValidatorRef adminAddr tokenId
         WineInteraction (BurnRefToken tokenId) Nothing -> (,Nothing) <$> burnRefToken wineValidatorRef adminAddr tokenId
         _ -> liftEitherToCustomException $ Left "Invalid Wine Interraction"
+        

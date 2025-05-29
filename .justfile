@@ -10,8 +10,6 @@
 @cli *OPTS:
   cabal run . -- {{ OPTS }} 2>&1 || true
 
-
-
 # cabal repl
 @repl:
   cabal repl
@@ -25,8 +23,6 @@ hls-bin := `which haskell-language-server`
   else echo "haskell-language-server not found!"; \
   fi
 
-
 # clean nix store
 @gc:
   nix-collect-garbage -d
-

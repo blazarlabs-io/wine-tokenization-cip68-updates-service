@@ -3,7 +3,6 @@
 module RestAPI where
 
 import Control.Monad.Except
-
 import Control.Exception (throw)
 import Control.Exception.Extra (try)
 import Control.Lens ((&), (.~), (?~))
@@ -30,13 +29,15 @@ import Offchain.Interactions (
  )
 import Offchain.Operations
 import Offchain.Transactions (runWineTx)
-
 import Data.String
 import Network.Wai.Middleware.Servant.Options (provideOptions)
 import RIO.Text qualified as T
 import Servant
 import Servant.Swagger
 import Servant.Swagger.UI
+import Onchain.HydraType
+import Offchain.HydraOperation
+import Server.Pinata
 
 newtype BinaryData = BinaryData {unBinaryData :: BS.ByteString}
     deriving (Show, Eq, Generic)
@@ -124,15 +125,32 @@ type WineTxAPI =
                     :> Delete '[JSON] TxResp
            )
 
-type IpfsAPI =
-    Summary "Add to IPFS"
-        :> Description "Add to IPFS"
+type PinataAPI =
+    Summary "Add to Pinata"
+        :> Description "Add to Pinata"
         :> "add"
         :> ReqBody '[OctetStream] BinaryData
         :> Post '[JSON] String
 
-type WineAPI = (WineTxAPI :<|> WineLookupAPI :<|> IpfsAPI)
-type WineAPIPrivate = BasicAuth "user-realm" User :> (WineTxAPI :<|> WineLookupAPI :<|> IpfsAPI)
+type CommitDecommitAPI =
+    Summary "Commit to Hydra"
+        :> Description "Commit to Hydra"
+        :> "commit"
+        :> ReqBody '[JSON] CommitRequest
+        :> Post '[JSON] String
+    -- :<|> Summary "Update token metadata in Hydra head"
+    --     :> Description "Update token metadata in Hydra head"
+    --     :> "update"
+    --     :> ReqBody '[JSON] UpdateRequest
+    --     :> Post '[JSON] String
+    -- :<|> Summary "Decommit from Hydra"
+    --     :> Description "Decommit from Hydra"
+    --     :> "decommit" 
+    --     :> ReqBody '[JSON] DecommitRequest 
+    --     :> Post '[JSON] String
+
+type WineAPI = (WineTxAPI :<|> WineLookupAPI :<|> PinataAPI :<|> CommitDecommitAPI)
+type WineAPIPrivate = BasicAuth "user-realm" User :> (WineTxAPI :<|> WineLookupAPI :<|> PinataAPI :<|> CommitDecommitAPI)
 
 type WineREST =
     SwaggerSchemaUI "swagger-ui" "swagger-api.json"
@@ -164,11 +182,12 @@ wineServer ctx =
         :<|> const -- usr
             ( txServer ctx -- Tx API
                 :<|> handleGetNFT ctx -- Lookup API
-                :<|> handleAddIPFS -- IPFS API
+                :<|> handleAddPinata -- Pinata API
+                :<|> hydraServer ctx -- added commit and decommit api
             )
 
-handleAddIPFS :: BinaryData -> IO String
-handleAddIPFS (BinaryData bs) = addByteStringToIPFS bs
+handleAddPinata :: BinaryData -> IO String
+handleAddPinata (BinaryData bs) = addByteStringToPinata bs
 
 txServer :: WineOffchainContext -> ServerT WineTxAPI IO
 txServer ctx wait =
@@ -179,24 +198,59 @@ txServer ctx wait =
         :<|> handleBurnUserTx ctx wait
         :<|> handleBurnRefTx ctx wait
 
+-- added part for commit and decommit
+hydraServer :: WineOffchainContext -> ServerT CommitDecommitAPI IO
+hydraServer ctx = 
+    handleCommit ctx
+        -- :<|> handleUpdate ctx
+        -- :<|> handleDecommit ctx
+
+handleCommit :: WineOffchainContext -> CommitRequest -> IO String
+handleCommit ctx req = do
+    let tid = tokenId req
+    mUtxo <- findNFTUtxo tid 0  -- Amount is ignored now
+    case mUtxo of
+      Just utxo -> commitUTxO utxo >> return "Committed"
+      Nothing -> return "NFT not found"
+
+-- handleUpdate :: WineOffchainContext -> UpdateRequest -> IO String
+-- handleUpdate ctx (UpdateRequest tid newMetadata) = do
+--     mUtxo <- findNFTUtxo tid
+--     case mUtxo of
+--       Just utxo -> do
+--           updateNFTMetadata tid newMeta
+--           return "Updated"
+--       Nothing -> return "NFT not found"
+
+-- handleDecommit :: WineOffchainContext -> DecommitRequest -> IO String
+-- handleDecommit ctx (DecommitRequest tid) = do
+--      mUtxo <- findNFTUtxo tid
+--      case mUtxo of
+--       Just utxo -> decommitUtxo utxo >> return "Decommitted"
+--       Nothing -> return "NFT not found"
+
 handleMintBatchTx :: WineOffchainContext -> Bool -> WineBatchDTO -> IO TxResp
 handleMintBatchTx ctx wait (WineBatchDTO i d s) = do
-    d' <- addTokenDataToIPFS d
+    --d' <- addTokenDataToIPFS d
+    d' <- addTokenDataToPinata d
     mkTxResp <$> runWineTx wait ctx (WineInteraction MintBatch (Just (Batch i d' s)))
 
 handleMintBottleTx :: WineOffchainContext -> Bool -> WineBottleDTO -> IO TxResp
 handleMintBottleTx ctx wait (WineBottleDTO i d s) = do
-    d' <- addTokenDataToIPFS d
+    --d' <- addTokenDataToIPFS d
+    d' <- addTokenDataToPinata d
     mkTxResp <$> runWineTx wait ctx (WineInteraction MintBottle (Just (Bottle i d' s)))
 
 handleUpdateBatchTx :: WineOffchainContext -> Bool -> GYAssetClass -> WineBatchDTO -> IO TxResp
 handleUpdateBatchTx ctx wait batchId (WineBatchDTO i d s) = do
-    d' <- addTokenDataToIPFS d
+    --d' <- addTokenDataToIPFS d
+    d' <- addTokenDataToPinata d
     mkTxResp <$> runWineTx wait ctx (WineInteraction (UpdateBatch batchId) (Just (Batch i d' s)))
 
 handleUpdateBottleTx :: WineOffchainContext -> Bool -> GYAssetClass -> WineBottleDTO -> IO TxResp
 handleUpdateBottleTx ctx wait bottleId (WineBottleDTO i d s) = do
-    d' <- addTokenDataToIPFS d
+    --d' <- addTokenDataToIPFS d
+    d' <- addTokenDataToPinata d
     mkTxResp <$> runWineTx wait ctx (WineInteraction (UpdateBottle bottleId) (Just (Bottle i d' s)))
 
 handleBurnUserTx :: WineOffchainContext -> Bool -> GYAssetClass -> IO TxResp
@@ -215,7 +269,7 @@ handleGetNFT (WineOffchainContext (WineAdminContext{..}) providetCtx) tokenId = 
         Right wt -> do
             let wtdt = fromWineToken wt
             let d = getTokenData wtdt
-            d' <- getTokenDataFromIPFS d
+            d' <- getTokenDataFromPinata d
             return $ updateTokenData wtdt d'
 
 restAPIapp :: Text -> Text -> WineOffchainContext -> Application

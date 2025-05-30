@@ -7,7 +7,7 @@
 FROM --platform=$TARGETPLATFORM haskell:9.6.6 AS builder
 
 ##
-# Let’s define architecture/platform arguments so we can do architecture-
+# Let's define architecture/platform arguments so we can do architecture-
 # specific tasks (e.g., download the correct IPFS binary).
 ##
 ARG TARGETARCH
@@ -59,6 +59,9 @@ ENV PATH="/root/.cabal/bin:/root/.local/bin:$PATH"
 
 RUN git clone https://github.com/IntersectMBO/libsodium && \
     cd libsodium && \
+    curl -L -o build-aux/config.guess https://git.savannah.gnu.org/gitweb/?p=config.git;a=blob_plain;f=config.guess;hb=HEAD && \
+    curl -L -o build-aux/config.sub https://git.savannah.gnu.org/gitweb/?p=config.git;a=blob_plain;f=config.sub;hb=HEAD && \
+    chmod +x build-aux/config.guess build-aux/config.sub && \
     git fetch --all --recurse-submodules --tags && \
     git tag && \
     ./autogen.sh && \
@@ -66,6 +69,7 @@ RUN git clone https://github.com/IntersectMBO/libsodium && \
     make && \
     make install && \
     cd .. && rm -rf libsodium
+    
 ENV LD_LIBRARY_PATH="/usr/local/lib:$LD_LIBRARY_PATH"
 ENV PKG_CONFIG_PATH="/usr/local/lib/pkgconfig:$PKG_CONFIG_PATH"
 
@@ -109,19 +113,29 @@ RUN ipfs config --json API.HTTPHeaders.Access-Control-Allow-Credentials "[\"true
 # Start IPFS daemon
 RUN ipfs daemon &
 
-# Install the project
-WORKDIR /wine
+# Set environment variables for Plutus
+ENV BLST_REF=master
+ENV CABAL_BUILD_OPTIONS="--with-ghc=ghc-9.6.6 --allow-newer=plutus-tx-plugin:ghc-prim"
 
-COPY *.cabal cabal.project /wine/
+# Create build directory
+WORKDIR /build
 
+# Copy only the main cabal file and create a simplified cabal.project
+COPY wine-project.cabal ./
+COPY cabal.project ./
+
+# Create cabal config directory and update
+RUN mkdir -p /root/.config/cabal
 RUN cabal update
 
 # Docker will cache this command as a layer, freeing us up to
 # modify source code without re-installing dependencies
 # (unless the .cabal file changes!)
-RUN cabal build --only-dependencies -j10
 
-COPY . /wine
+RUN cabal build --only-dependencies -j10 ${CABAL_BUILD_OPTIONS}
+
+# Copy the rest of the source code
+COPY . .
 
 RUN update-alternatives --install /usr/bin/ld ld /usr/bin/ld.bfd 100
 
@@ -129,5 +143,3 @@ RUN cabal build all --ghc-options="-optl-Wl,--stub-group-size=0x3FFDFFE"
 
 # Add and Install Application Code
 RUN cabal install server --ghc-options="-optl-Wl,--stub-group-size=0x3FFDFFE"  
-
-

@@ -81,6 +81,9 @@ library
     Onchain.OnchainUtils
     Onchain.Types
     Onchain.WineValidator
+    Offchain.HydraOperation
+    Onchain.HydraType
+    Server.Pinata
     Parameters
     Prelude
 
@@ -95,6 +98,16 @@ library
     , swagger2
     , text
     , mtl
+    , unordered-containers
+    , data-has
+    , http-client
+    , http-client-tls
+    , http-types
+    , rio
+    , hashable
+    , http-conduit
+    , process
+    , scientific
 
   --- Cardano specific dependencies
   build-depends:
@@ -161,20 +174,15 @@ executable server
     , wai
     , wai-cors
     , warp
+    , http-client         ^>=0.7
+    , http-client-tls     ^>=0.3
+    , hashable            ^>=1.4
+    , http-conduit
+    , process
+    , scientific
 
   --- Cardano specific dependencies
   build-depends:  atlas-cardano
-
--- , utf8-string
--- , http-types       ^>=0.12.4
-
--- , transformers     ^>=0.6.1
--- , wai-websockets
--- , websockets
--- , servant-conduit
--- , conduit
--- , servant-event-stream
-
 
 executable admin
   import:         options
@@ -188,6 +196,24 @@ executable admin
     , bytestring  ^>=0.11.5
     , haskeline
     , mtl
+    , http-conduit
+    , process
+    , scientific
 
   --- Cardano specific dependencies
   build-depends:  atlas-cardano
+
+executable test-pinata
+  import:         options
+  main-is:        test-pinata.hs
+  hs-source-dirs: test
+  build-depends:  wine-project
+  build-depends:
+    , aeson
+    , bytestring
+    , http-client
+    , http-client-tls
+    , rio
+    , text
+    , mtl
+    , process

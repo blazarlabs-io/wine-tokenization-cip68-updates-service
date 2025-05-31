@@ -143,11 +143,11 @@ type CommitDecommitAPI =
     --     :> "update"
     --     :> ReqBody '[JSON] UpdateRequest
     --     :> Post '[JSON] String
-    -- :<|> Summary "Decommit from Hydra"
-    --     :> Description "Decommit from Hydra"
-    --     :> "decommit" 
-    --     :> ReqBody '[JSON] DecommitRequest 
-    --     :> Post '[JSON] String
+        :<|> Summary "Decommit from Hydra"
+           :> Description "Decommit from Hydra"
+           :> "decommit" 
+           :> ReqBody '[JSON] DecommitRequest 
+           :> Post '[JSON] String
 
 type WineAPI = (WineTxAPI :<|> WineLookupAPI :<|> PinataAPI :<|> CommitDecommitAPI)
 type WineAPIPrivate = BasicAuth "user-realm" User :> (WineTxAPI :<|> WineLookupAPI :<|> PinataAPI :<|> CommitDecommitAPI)
@@ -222,12 +222,12 @@ handleCommit ctx req = do
 --           return "Updated"
 --       Nothing -> return "NFT not found"
 
--- handleDecommit :: WineOffchainContext -> DecommitRequest -> IO String
--- handleDecommit ctx (DecommitRequest tid) = do
---      mUtxo <- findNFTUtxo tid
---      case mUtxo of
---       Just utxo -> decommitUtxo utxo >> return "Decommitted"
---       Nothing -> return "NFT not found"
+   handleDecommit :: WineOffchainContext -> DecommitRequest -> IO String
+   handleDecommit ctx (DecommitRequest tid) = do
+        mUtxo <- findNFTUtxo tid
+        case mUtxo of
+         Just utxo -> decommitUtxo utxo >> return "Decommitted"
+         Nothing -> return "NFT not found"
 
 handleMintBatchTx :: WineOffchainContext -> Bool -> WineBatchDTO -> IO TxResp
 handleMintBatchTx ctx wait (WineBatchDTO i d s) = do

@@ -26,3 +26,16 @@ data CommitRequest = CommitRequest
 instance ToJSON CommitRequest
 instance FromJSON CommitRequest
 instance ToSchema CommitRequest 
+
+instance ToJSON DecommitRequest
+instance FromJSON DecommitRequest
+instance ToSchema DecommitRequest
+
+data DecommitRequest = DecommitRequest
+  { tokenId :: Text
+  , amount :: Integer
+  } deriving (Show, Generic)
+
+instance ToJSON DecommitRequest
+instance FromJSON DecommitRequest
+instance ToSchema DecommitRequest

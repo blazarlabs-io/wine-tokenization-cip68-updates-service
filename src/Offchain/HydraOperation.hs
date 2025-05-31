@@ -134,3 +134,55 @@ commitUTxO utxo = do
       Right _ -> return ("Committed" :: String)
       Left _ -> return ("error" :: String)
     return "Committed" 
+
+-- Decommit UTXO from Hydra node back to Cardano L1
+decommitUTxO :: UTxO -> IO String
+decommitUTxO utxo = do
+    manager <- newManager tlsManagerSettings
+    initialReq <- parseRequest (hydraNodeUrl ++ "/decommit")
+    let body = encode $ object ["utxo" .= utxo]
+    let req = initialReq { method = "POST", requestBody = RequestBodyLBS body }
+    response <- httpLbs req manager
+    let body = responseBody response
+    case eitherDecode body :: Either String Value of
+      Right _ -> return ("Decommitted" :: String)
+      Left err -> do
+        traceM $ "Decommit error: " ++ err
+        return ("error" :: String)
+
+-- Helper function to verify decommit status
+verifyDecommitStatus :: Text -> IO Bool
+verifyDecommitStatus txIn = do
+    manager <- newManager tlsManagerSettings
+    initialReq <- parseRequest (hydraNodeUrl ++ "/status")
+    let req = initialReq { method = "GET" }
+    response <- httpLbs req manager
+    let body = responseBody response
+    case eitherDecode body :: Either String Value of
+      Right (Object status) -> do
+        case KM.lookup "decommitted" status of
+          Just (Array decommitted) -> 
+            return $ any (\v -> case v of
+              Object o -> case KM.lookup "txIn" o of
+                Just (String tx) -> tx == txIn
+                _ -> False
+              _ -> False) decommitted
+          _ -> return False
+      Left err -> do
+        traceM $ "Status check error: " ++ err
+        return False
+
+-- Function to wait for decommit confirmation
+waitForDecommitConfirmation :: Text -> Int -> IO Bool
+waitForDecommitConfirmation txIn maxAttempts = do
+    let checkStatus attempt = do
+        if attempt >= maxAttempts
+            then return False
+            else do
+                status <- verifyDecommitStatus txIn
+                if status
+                    then return True
+                    else do
+                        threadDelay 1000000  -- Wait 1 second
+                        checkStatus (attempt + 1)
+    checkStatus 0 

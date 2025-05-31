@@ -21,6 +21,7 @@ import Data.Aeson.Key (fromText, toText)
 import Debug.Trace (traceM)
 import Data.List (unwords, words)
 import Text.Read (readMaybe)
+import Control.Concurrent (threadDelay)
 
 cardanoCliPath :: String
 cardanoCliPath = "cardano-cli"
